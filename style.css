@@ -1,0 +1,67 @@
+:root {
+    --bg-dark: #101419;
+    --bg-card: #191f28;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --border-color: #334155;
+    --unseen: #6b7280;
+    --seen: #3b82f6;
+    --answered: #22c55e;
+    --review: #a855f7;
+}
+body {
+    font-family: 'Space Grotesk', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+}
+.aa-legend-popover {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+.aa-legend-btn:hover + .aa-legend-popover, .aa-legend-popover:hover {
+    visibility: visible;
+    opacity: 1;
+}
+.aa-toast {
+    animation: aa-toast-in-out 3s ease-in-out forwards;
+    visibility: hidden;
+}
+.aa-toast.aa-show {
+    visibility: visible;
+}
+@keyframes aa-toast-in-out {
+    0% { transform: translateY(100%); opacity: 0; }
+    10% { transform: translateY(0); opacity: 1; }
+    90% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(100%); opacity: 0; }
+}
+.aa-chip {
+    background: var(--unseen);
+    transition: all 0.2s ease-in-out;
+}
+.aa-chip.aa-current {
+     box-shadow: 0 0 0 2px white;
+}
+.aa-chip.aa-seen { background: var(--seen); }
+.aa-chip.aa-answered { background: var(--answered); }
+.aa-chip.aa-review { background: var(--review); }
+
+.aa-opt-card {
+    transition: background-color 0.2s, border-color 0.2s;
+}
+.aa-opt-card:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-color: var(--seen);
+}
+input[type="radio"]:checked + .aa-opt-card {
+    background-color: rgba(59, 130, 246, 0.2);
+    border-color: var(--seen);
+}
+.aa-modal-backdrop {
+    background-color: rgba(0,0,0,0.7);
+    backdrop-filter: blur(5px);
+}
+#aa-palette{
+  padding: 0.5em;
+}
