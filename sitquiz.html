@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIT Online Examination</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <style type="text/tailwindcss">
+        :root {
+            --bg-dark: #101419;
+            --bg-card: #191f28;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            /* Updated Colors based on user request */
+            --unseen: #6b7280; /* Grey */
+            --seen: #3b82f6;   /* Blue */
+            --answered: #22c55e; /* Green */
+            --review: #a855f7; /* Purple */
+        }
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+        }
+        .legend-popover {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .legend-icon:hover + .legend-popover, .legend-popover:hover {
+            visibility: visible;
+            opacity: 1;
+        }
+        .toast {
+            animation: toast-in-out 3s ease-in-out forwards;
+            visibility: hidden;
+        }
+        .toast.show {
+            visibility: visible;
+        }
+        @keyframes toast-in-out {
+            0% { transform: translateY(100%); opacity: 0; }
+            10% { transform: translateY(0); opacity: 1; }
+            90% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(100%); opacity: 0; }
+        }
+        .neumorphic-chip {
+            background: var(--unseen);
+            transition: all 0.2s ease-in-out;
+        }
+        .neumorphic-chip.current {
+             box-shadow: 0 0 0 2px white; /* Decreased border size */
+        }
+        .neumorphic-chip.seen { background: var(--seen); }
+        .neumorphic-chip.answered { background: var(--answered); }
+        .neumorphic-chip.review { background: var(--review); }
+        
+        .option-card {
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .option-card:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: var(--seen);
+        }
+        input[type="radio"]:checked + .option-card {
+            background-color: rgba(59, 130, 246, 0.2);
+            border-color: var(--seen);
+        }
+        .modal-backdrop {
+            background-color: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+        }
+        /* Loader Animation Styles */
+        #loader.hidden {
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s 0.5s, opacity 0.5s ease-out;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            background-color: var(--seen);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+    </style>
+</head>
+<body class="bg-[var(--bg-dark)] text-[var(--text-primary)]">
+
+<!-- Loading Animation -->
+<div id="loader" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[var(--bg-dark)]">
+    <img src="https://i.ibb.co/6g4g0bB/download-removebg-preview.png" alt="SIT Logo" class="h-20 mb-6">
+    <h2 class="text-2xl font-bold text-white mb-8">Preparing Your Exam...</h2>
+    <div class="flex space-x-2">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    </div>
+</div>
+
+<!-- Main Exam Interface (Initially hidden) -->
+<div id="exam-ui" class="relative min-h-screen hidden">
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-3 bg-[var(--bg-dark)]/80 backdrop-blur-sm border-b border-[var(--border-color)]">
+        <div class="flex items-center gap-4">
+            <img src="https://i.ibb.co/6g4g0bB/download-removebg-preview.png" alt="SIT Logo" class="h-12">
+            <h1 class="text-xl font-bold hidden sm:block">Seshasayee Institute of Technology</h1>
+        </div>
+        <div class="flex items-center gap-6">
+            <div id="answered-status" class="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--bg-card)]">
+                <span class="text-[var(--text-primary)] font-medium">Answered 0/20</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <img src="https://i.ibb.co/RzCg2z7/Sand-Animation.gif" alt="Timer Animation" class="h-8 w-8">
+                <span id="timer" class="font-mono text-xl font-bold text-red-500">20:00</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex flex-row-reverse pt-24 pb-24">
+        <!-- Right Sidebar: Question Palette -->
+        <aside class="sticky top-24 h-[calc(100vh-12rem)] w-full max-w-sm p-4 flex-col hidden lg:flex">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold">Question Palette</h2>
+                <div class="relative">
+                    <i class="material-icons text-[var(--text-secondary)] cursor-pointer legend-icon">info</i>
+                    <div class="legend-popover absolute right-0 w-60 p-4 rounded-lg bg-slate-900/80 backdrop-blur-md border border-[var(--border-color)] shadow-2xl">
+                        <h3 class="font-bold mb-3">Legend</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full" style="background-color: var(--answered)"></div> Answered</div>
+                            <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full" style="background-color: var(--seen)"></div> Seen</div>
+                            <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full" style="background-color: var(--review)"></div> Marked for Review</div>
+                            <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full" style="background-color: var(--unseen)"></div> Unseen</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="question-palette" class="grid grid-cols-5 gap-4 overflow-y-auto pr-2">
+                <!-- Palette chips will be generated by JS -->
+            </div>
+        </aside>
+
+        <!-- Left Content: Question -->
+        <div class="flex-1 px-4 sm:px-8">
+            <div id="question-container" class="bg-[var(--bg-card)] rounded-xl shadow-2xl p-6 sm:p-8 border border-[var(--border-color)]">
+                <!-- Question content will be generated by JS -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="fixed bottom-0 left-0 right-0 z-20 bg-[var(--bg-dark)]/80 backdrop-blur-sm border-t border-[var(--border-color)]">
+        <div class="flex items-center justify-between px-6 py-3 max-w-7xl mx-auto">
+            <button id="back-btn" class="px-6 py-2 rounded-lg font-bold text-[var(--text-primary)] bg-slate-700 hover:bg-slate-600 transition-colors">Back</button>
+            <div class="flex items-center gap-2 sm:gap-4">
+                <button id="review-btn" class="px-4 py-2 rounded-lg font-bold text-white bg-[var(--review)] hover:bg-purple-500 transition-colors flex items-center gap-2"><i class="material-icons text-base">bookmark</i><span class="hidden sm:inline">Mark for Review</span></button>
+                <button id="save-btn" class="px-4 py-2 rounded-lg font-bold text-white bg-[var(--answered)] hover:bg-green-500 transition-colors flex items-center gap-2"><i class="material-icons text-base">save</i><span class="hidden sm:inline">Save</span></button>
+                <button id="next-btn" class="px-4 py-2 rounded-lg font-bold text-white bg-[var(--seen)] hover:bg-blue-500 transition-colors flex items-center gap-2"><span class="hidden sm:inline">Next</span><i class="material-icons text-base">arrow_forward</i></button>
+            </div>
+            <button id="finish-btn" class="px-6 py-2 rounded-lg font-bold text-white bg-red-600 hover:bg-red-500 transition-colors">Finish</button>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast fixed bottom-24 right-6 flex items-center gap-3 bg-green-600/90 text-white px-5 py-3 rounded-lg shadow-2xl border border-green-500">
+        <i class="material-icons">check_circle</i>
+        <span class="font-bold">Saved Successfully!</span>
+    </div>
+</div>
+
+<!-- Results Page -->
+<div id="results-page" class="hidden min-h-screen flex items-center justify-center">
+    <div class="bg-[var(--bg-card)] rounded-xl shadow-2xl p-8 sm:p-12 border border-[var(--border-color)] text-center w-full max-w-md">
+        <h1 class="text-3xl font-bold mb-4">Exam Finished!</h1>
+        <p class="text-[var(--text-secondary)] mb-8">Here are your results.</p>
+        <div class="bg-green-500/20 border-2 border-green-500 rounded-full w-48 h-48 mx-auto flex flex-col items-center justify-center mb-8">
+            <p class="text-lg">You Scored</p>
+            <p id="final-score" class="text-5xl font-bold text-white">15/20</p>
+        </div>
+        <div class="flex justify-around text-lg">
+            <div>
+                <p class="font-bold text-green-400">Correct</p>
+                <p id="correct-answers" class="text-2xl font-bold">15</p>
+            </div>
+            <div>
+                <p class="font-bold text-red-400">Wrong</p>
+                <p id="wrong-answers" class="text-2xl font-bold">5</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div id="confirmation-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="modal-backdrop fixed inset-0"></div>
+    <div class="bg-[var(--bg-card)] rounded-xl shadow-2xl p-8 border border-[var(--border-color)] text-center w-full max-w-sm relative">
+        <h2 class="text-2xl font-bold mb-4">Finish Exam?</h2>
+        <p class="text-[var(--text-secondary)] mb-8">Are you sure you want to submit your exam? This action cannot be undone.</p>
+        <div class="flex justify-center gap-4">
+            <button id="cancel-finish-btn" class="px-8 py-2 rounded-lg font-bold text-[var(--text-primary)] bg-slate-600 hover:bg-slate-500 transition-colors">Cancel</button>
+            <button id="confirm-finish-btn" class="px-8 py-2 rounded-lg font-bold text-white bg-red-600 hover:bg-red-500 transition-colors">Yes, Finish</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- DATA ---
+    const questions = [
+        {
+            question: "What is the primary cause of the Earth's seasons?",
+            options: ["The Earth's distance from the Sun", "The tilt of the Earth's axis", "The speed of the Earth's rotation", "Ocean currents"],
+            correctAnswer: 1,
+            status: 'unseen', // unseen, seen, answered, review
+            userAnswer: null
+        },
+        {
+            question: "Which planet is known as the 'Red Planet'?",
+            options: ["Venus", "Mars", "Jupiter", "Saturn"],
+            correctAnswer: 1,
+            status: 'unseen',
+            userAnswer: null
+        },
+        {
+            question: "What is the largest mammal in the world?",
+            options: ["Elephant", "Giraffe", "Blue Whale", "Great White Shark"],
+            correctAnswer: 2,
+            status: 'unseen',
+            userAnswer: null
+        },
+        {
+            question: "What is the chemical symbol for Gold?",
+            options: ["Ag", "Au", "Pb", "Fe"],
+            correctAnswer: 1,
+            status: 'unseen',
+            userAnswer: null
+        },
+        {
+            question: "In which year did the Titanic sink?",
+            options: ["1905", "1912", "1918", "1923"],
+            correctAnswer: 1,
+            status: 'unseen',
+            userAnswer: null
+        },
+        // Add more questions to reach 20
+        ...Array.from({ length: 15 }, (_, i) => ({
+            question: `Sample Question ${i + 6}?`,
+            options: [`Option A${i}`, `Option B${i}`, `Option C${i}`, `Option D${i}`],
+            correctAnswer: i % 4,
+            status: 'unseen',
+            userAnswer: null
+        }))
+    ];
+
+    // --- STATE ---
+    let currentQuestionIndex = 0;
+    let timerInterval;
+    let timeLeft = 20 * 60; // 20 minutes in seconds
+
+    // --- SELECTORS ---
+    const loader = document.getElementById('loader');
+    const examUI = document.getElementById('exam-ui');
+    const resultsPage = document.getElementById('results-page');
+    const confirmationModal = document.getElementById('confirmation-modal');
+
+    const questionContainer = document.getElementById('question-container');
+    const paletteContainer = document.getElementById('question-palette');
+    const answeredStatus = document.getElementById('answered-status');
+    const timerDisplay = document.getElementById('timer');
+
+    const backBtn = document.getElementById('back-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const saveBtn = document.getElementById('save-btn');
+    const reviewBtn = document.getElementById('review-btn');
+    const finishBtn = document.getElementById('finish-btn');
+    const cancelFinishBtn = document.getElementById('cancel-finish-btn');
+    const confirmFinishBtn = document.getElementById('confirm-finish-btn');
+    const toast = document.getElementById('toast');
+
+    // --- FUNCTIONS ---
+
+    function renderQuestion() {
+        const questionData = questions[currentQuestionIndex];
+        
+        if (questionData.status === 'unseen') {
+            questionData.status = 'seen';
+        }
+
+        const optionsHTML = questionData.options.map((option, index) => {
+            const isChecked = questionData.userAnswer === index;
+            return `
+                <label class="block cursor-pointer">
+                    <input class="sr-only peer" name="question-option" type="radio" value="${index}" ${isChecked ? 'checked' : ''}>
+                    <div class="option-card flex items-center p-4 rounded-lg border-2 border-transparent bg-slate-800/50">
+                        <span class="flex items-center justify-center w-8 h-8 rounded-full bg-slate-700 mr-4 font-bold">${String.fromCharCode(65 + index)}</span>
+                        <span class="text-[var(--text-primary)]">${option}</span>
+                    </div>
+                </label>
+            `;
+        }).join('');
+
+        questionContainer.innerHTML = `
+            <p class="text-[var(--text-secondary)] mb-2">Question ${currentQuestionIndex + 1} of ${questions.length}</p>
+            <h2 class="text-2xl font-bold leading-snug mb-6">${questionData.question}</h2>
+            <div class="space-y-4">${optionsHTML}</div>
+        `;
+        renderPalette();
+        updateNavigationButtons();
+    }
+
+    function renderPalette() {
+        paletteContainer.innerHTML = questions.map((q, index) => {
+            const isCurrent = index === currentQuestionIndex;
+            return `
+                <div 
+                    class="neumorphic-chip ${q.status} ${isCurrent ? 'current' : ''} flex items-center justify-center h-12 w-12 rounded-lg cursor-pointer text-white font-bold"
+                    data-index="${index}"
+                >
+                    ${index + 1}
+                </div>
+            `;
+        }).join('');
+
+        document.querySelectorAll('.neumorphic-chip').forEach(chip => {
+            chip.addEventListener('click', (e) => {
+                const index = parseInt(e.currentTarget.dataset.index);
+                navigateToQuestion(index);
+            });
+        });
+    }
+
+    function updateNavigationButtons() {
+        backBtn.disabled = currentQuestionIndex === 0;
+        nextBtn.disabled = currentQuestionIndex === questions.length - 1;
+        backBtn.classList.toggle('opacity-50', backBtn.disabled);
+        nextBtn.classList.toggle('opacity-50', nextBtn.disabled);
+    }
+    
+    function updateAnsweredStatus() {
+        const answeredCount = questions.filter(q => q.status === 'answered').length;
+        answeredStatus.innerHTML = `<span class="text-[var(--text-primary)] font-medium">Answered ${answeredCount}/${questions.length}</span>`;
+    }
+
+    function navigateToQuestion(index) {
+        if (index >= 0 && index < questions.length) {
+            currentQuestionIndex = index;
+            renderQuestion();
+        }
+    }
+
+    function handleSave() {
+        const selectedOption = questionContainer.querySelector('input[name="question-option"]:checked');
+        if (selectedOption) {
+            const answerIndex = parseInt(selectedOption.value);
+            questions[currentQuestionIndex].userAnswer = answerIndex;
+            questions[currentQuestionIndex].status = 'answered';
+            
+            showToast();
+            updateAnsweredStatus();
+            renderPalette();
+        } else {
+            alert('Please select an option before saving.');
+        }
+    }
+
+    function handleMarkForReview() {
+        questions[currentQuestionIndex].status = 'review';
+        renderPalette();
+    }
+
+    function showToast() {
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            if (timeLeft <= 0) {
+                finishExam();
+            }
+        }, 1000);
+    }
+
+    function finishExam() {
+        clearInterval(timerInterval);
+        
+        let correctCount = 0;
+        questions.forEach(q => {
+            if (q.userAnswer === q.correctAnswer) {
+                correctCount++;
+            }
+        });
+        const wrongCount = questions.length - correctCount;
+
+        document.getElementById('final-score').textContent = `${correctCount}/${questions.length}`;
+        document.getElementById('correct-answers').textContent = correctCount;
+        document.getElementById('wrong-answers').textContent = wrongCount;
+
+        examUI.classList.add('hidden');
+        resultsPage.classList.remove('hidden');
+        confirmationModal.classList.add('hidden');
+    }
+
+    // --- EVENT LISTENERS ---
+    nextBtn.addEventListener('click', () => navigateToQuestion(currentQuestionIndex + 1));
+    backBtn.addEventListener('click', () => navigateToQuestion(currentQuestionIndex - 1));
+    saveBtn.addEventListener('click', handleSave);
+    reviewBtn.addEventListener('click', handleMarkForReview);
+
+    finishBtn.addEventListener('click', () => {
+        confirmationModal.classList.remove('hidden');
+    });
+
+    cancelFinishBtn.addEventListener('click', () => {
+        confirmationModal.classList.add('hidden');
+    });
+
+    confirmFinishBtn.addEventListener('click', finishExam);
+
+    // --- INITIALIZATION ---
+    // Simulate loading time
+    setTimeout(() => {
+        loader.classList.add('hidden');
+        examUI.classList.remove('hidden');
+        
+        // Start the exam
+        renderQuestion();
+        updateAnsweredStatus();
+        startTimer();
+    }, 2500); // 2.5 seconds delay
+});
+</script>
+
+</body>
+</html>
