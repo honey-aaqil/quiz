@@ -24,23 +24,25 @@
         }
         body {
             font-family: 'Space Grotesk', sans-serif;
+        }
+        .aaqil-body {
             background-color: var(--bg-dark);
             color: var(--text-primary);
         }
-        .legend-popover {
+        .aaqil-legend-popover {
             visibility: hidden;
             opacity: 0;
             transition: opacity 0.3s, visibility 0.3s;
         }
-        .legend-icon:hover + .legend-popover, .legend-popover:hover {
+        .aaqil-legend-icon:hover + .aaqil-legend-popover, .aaqil-legend-popover:hover {
             visibility: visible;
             opacity: 1;
         }
-        .toast {
+        .aaqil-toast {
             animation: toast-in-out 3s ease-in-out forwards;
             visibility: hidden;
         }
-        .toast.show {
+        .aaqil-toast.show {
             visibility: visible;
         }
         @keyframes toast-in-out {
@@ -49,29 +51,29 @@
             90% { transform: translateY(0); opacity: 1; }
             100% { transform: translateY(100%); opacity: 0; }
         }
-        .neumorphic-chip {
+        .aaqil-palette-chip {
             background: var(--unseen);
             transition: all 0.2s ease-in-out;
         }
-        .neumorphic-chip.current {
+        .aaqil-palette-chip.current {
              box-shadow: 0 0 0 2px white; /* Decreased border size */
         }
-        .neumorphic-chip.seen { background: var(--seen); }
-        .neumorphic-chip.answered { background: var(--answered); }
-        .neumorphic-chip.review { background: var(--review); }
+        .aaqil-palette-chip.seen { background: var(--seen); }
+        .aaqil-palette-chip.answered { background: var(--answered); }
+        .aaqil-palette-chip.review { background: var(--review); }
         
-        .option-card {
+        .aaqil-option-card {
             transition: background-color 0.2s, border-color 0.2s;
         }
-        .option-card:hover {
+        .aaqil-option-card:hover {
             background-color: rgba(59, 130, 246, 0.1);
             border-color: var(--seen);
         }
-        input[type="radio"]:checked + .option-card {
+        input[type="radio"]:checked + .aaqil-option-card {
             background-color: rgba(59, 130, 246, 0.2);
             border-color: var(--seen);
         }
-        .modal-backdrop {
+        .aaqil-modal-backdrop {
             background-color: rgba(0,0,0,0.7);
             backdrop-filter: blur(5px);
         }
@@ -81,31 +83,31 @@
             opacity: 0;
             transition: visibility 0s 0.5s, opacity 0.5s ease-out;
         }
-        .dot {
+        .aaqil-loader-dot {
             width: 12px;
             height: 12px;
             background-color: var(--seen);
             border-radius: 50%;
             animation: bounce 1.4s infinite ease-in-out both;
         }
-        .dot:nth-child(1) { animation-delay: -0.32s; }
-        .dot:nth-child(2) { animation-delay: -0.16s; }
+        .aaqil-loader-dot:nth-child(1) { animation-delay: -0.32s; }
+        .aaqil-loader-dot:nth-child(2) { animation-delay: -0.16s; }
         @keyframes bounce {
             0%, 80%, 100% { transform: scale(0); }
             40% { transform: scale(1.0); }
         }
     </style>
 </head>
-<body class="bg-[var(--bg-dark)] text-[var(--text-primary)]">
+<body class="aaqil-body">
 
 <!-- Loading Animation -->
 <div id="loader" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[var(--bg-dark)]">
     <img src="https://i.ibb.co/6g4g0bB/download-removebg-preview.png" alt="SIT Logo" class="h-20 mb-6">
     <h2 class="text-2xl font-bold text-white mb-8">Preparing Your Exam...</h2>
     <div class="flex space-x-2">
-        <div class="dot"></div>
-        <div class="dot"></div>
-        <div class="dot"></div>
+        <div class="aaqil-loader-dot"></div>
+        <div class="aaqil-loader-dot"></div>
+        <div class="aaqil-loader-dot"></div>
     </div>
 </div>
 
@@ -135,8 +137,8 @@
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-bold">Question Palette</h2>
                 <div class="relative">
-                    <i class="material-icons text-[var(--text-secondary)] cursor-pointer legend-icon">info</i>
-                    <div class="legend-popover absolute right-0 w-60 p-4 rounded-lg bg-slate-900/80 backdrop-blur-md border border-[var(--border-color)] shadow-2xl">
+                    <i class="material-icons text-[var(--text-secondary)] cursor-pointer aaqil-legend-icon">info</i>
+                    <div class="aaqil-legend-popover absolute right-0 w-60 p-4 rounded-lg bg-slate-900/80 backdrop-blur-md border border-[var(--border-color)] shadow-2xl">
                         <h3 class="font-bold mb-3">Legend</h3>
                         <div class="space-y-2 text-sm">
                             <div class="flex items-center gap-2"><div class="w-4 h-4 rounded-full" style="background-color: var(--answered)"></div> Answered</div>
@@ -174,7 +176,7 @@
     </footer>
 
     <!-- Toast Notification -->
-    <div id="toast" class="toast fixed bottom-24 right-6 flex items-center gap-3 bg-green-600/90 text-white px-5 py-3 rounded-lg shadow-2xl border border-green-500">
+    <div id="toast" class="aaqil-toast fixed bottom-24 right-6 flex items-center gap-3 bg-green-600/90 text-white px-5 py-3 rounded-lg shadow-2xl border border-green-500">
         <i class="material-icons">check_circle</i>
         <span class="font-bold">Saved Successfully!</span>
     </div>
@@ -204,7 +206,7 @@
 
 <!-- Confirmation Modal -->
 <div id="confirmation-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div class="modal-backdrop fixed inset-0"></div>
+    <div class="aaqil-modal-backdrop fixed inset-0"></div>
     <div class="bg-[var(--bg-card)] rounded-xl shadow-2xl p-8 border border-[var(--border-color)] text-center w-full max-w-sm relative">
         <h2 class="text-2xl font-bold mb-4">Finish Exam?</h2>
         <p class="text-[var(--text-secondary)] mb-8">Are you sure you want to submit your exam? This action cannot be undone.</p>
@@ -304,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return `
                 <label class="block cursor-pointer">
                     <input class="sr-only peer" name="question-option" type="radio" value="${index}" ${isChecked ? 'checked' : ''}>
-                    <div class="option-card flex items-center p-4 rounded-lg border-2 border-transparent bg-slate-800/50">
+                    <div class="aaqil-option-card flex items-center p-4 rounded-lg border-2 border-transparent bg-slate-800/50">
                         <span class="flex items-center justify-center w-8 h-8 rounded-full bg-slate-700 mr-4 font-bold">${String.fromCharCode(65 + index)}</span>
                         <span class="text-[var(--text-primary)]">${option}</span>
                     </div>
@@ -326,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const isCurrent = index === currentQuestionIndex;
             return `
                 <div 
-                    class="neumorphic-chip ${q.status} ${isCurrent ? 'current' : ''} flex items-center justify-center h-12 w-12 rounded-lg cursor-pointer text-white font-bold"
+                    class="aaqil-palette-chip ${q.status} ${isCurrent ? 'current' : ''} flex items-center justify-center h-12 w-12 rounded-lg cursor-pointer text-white font-bold"
                     data-index="${index}"
                 >
                     ${index + 1}
@@ -334,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }).join('');
 
-        document.querySelectorAll('.neumorphic-chip').forEach(chip => {
+        document.querySelectorAll('.aaqil-palette-chip').forEach(chip => {
             chip.addEventListener('click', (e) => {
                 const index = parseInt(e.currentTarget.dataset.index);
                 navigateToQuestion(index);
